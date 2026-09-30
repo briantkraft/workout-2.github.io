@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Workout Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EDF0F5;--card:#fff;--tx:#0F1728;--mu:#5F6B7F;--ac:#2F45F0;--ac2:#FF6A2B;--bd:#DCE1EA;--dg:#D92D20;--bar:#0F1728;box-sizing:border-box}
+@media(prefers-color-scheme:dark){:root{--bg:#0B0F1A;--card:#141B2B;--tx:#EEF1F8;--mu:#93A0B8;--ac:#7188FF;--bd:#242D42;--bar:#070A12}}
+*{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 Inter,-apple-system,system-ui,"Segoe UI",Roboto,sans-serif;padding:0 env(safe-area-inset-right) calc(84px + env(safe-area-inset-bottom)) env(safe-area-inset-left)}
+h1,h2,.brand,nav button,.dh{font-family:"Barlow Condensed","Arial Narrow",Impact,sans-serif}
+#bar{position:sticky;top:0;z-index:5;background:var(--bar);color:#fff;display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 18px 10px}
+.brand{font-size:24px;font-weight:800;letter-spacing:.02em}
+main{max-width:760px;margin:0 auto;padding:18px 14px}
+.ph{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin:4px 0 18px}
+h1{font-size:38px;line-height:1;font-weight:800;margin:0;letter-spacing:.01em}
+.ph p{margin:6px 0 0;color:var(--mu);font-size:14px}
+h2{font-size:21px;font-weight:700;margin:0 0 6px}
+.sh{display:flex;align-items:center;gap:10px;font-size:22px;margin:20px 0 10px}.sh::after{content:"";flex:1;height:1px;background:var(--bd)}
+.dh{font-size:19px;font-weight:700;margin:18px 0 6px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:10px}
+.wc{border-left:5px solid var(--ac2)}.ec{border-left:5px solid var(--ac)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sp{justify-content:space-between}
+.mu{color:var(--mu);font-size:14px}
+input,select,textarea{font:inherit;font-size:16px;width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx)}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+label{display:block;font-size:12px;color:var(--mu);margin:0 0 3px}
+.g{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}
+button{font:inherit;font-weight:600;padding:9px 16px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);cursor:pointer;min-height:42px}
+button.p{background:var(--ac);border-color:var(--ac);color:#fff}button.p:hover{filter:brightness(1.1)}
+button.d{color:var(--dg)}button:disabled{opacity:.4}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;border:0;border-radius:0;background:none;min-height:56px;color:var(--mu);font-size:19px;font-weight:700}
+nav button.on{color:var(--tx);box-shadow:inset 0 3px 0 var(--ac2)}
+pre{white-space:pre-wrap;font-size:12px;background:var(--bg);padding:8px;border-radius:8px;max-height:200px;overflow:auto}
+#t{position:fixed;top:calc(60px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:10px;display:none;z-index:9;max-width:90%}
+@media(max-width:480px){h1{font-size:32px}}
+.sr{display:grid;grid-template-columns:26px 1fr 1fr 1fr 42px;gap:6px;margin-bottom:6px;align-items:center}
+.sr.hd{font-size:12px;color:var(--mu);margin-bottom:2px}
+.sn{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:18px;color:var(--mu);text-align:center}
+.cm{grid-column:2/-1}
+.sr input{padding:9px 6px;min-width:0}
+.sr button{padding:0;min-height:42px}
+.cat{font-size:14px;color:var(--mu)}
+.hr{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--bd)}
+.hr button{padding:4px 10px;min-height:34px}
+.chk{min-height:42px;padding:8px 14px;white-space:nowrap}
+.chk.on{background:#15803D;border-color:#15803D;color:#fff}
+.card.dn{border-left:5px solid #15803D}
+.pb{height:8px;background:var(--bd);border-radius:99px;overflow:hidden;margin:-6px 0 16px}.pb i{display:block;height:100%;background:#15803D}
+.pill{font-size:13px;font-weight:600;padding:3px 10px;border-radius:99px;border:1px solid var(--bd);color:var(--mu);white-space:nowrap}
+.pill.done{background:#15803D;border-color:#15803D;color:#fff}.pill.part{border-color:var(--ac2);color:var(--ac2)}
+.xl{margin:6px 0;font-size:14px;color:var(--mu)}.xl .ok{color:#15803D;font-weight:600}
+.wc.cd{border-left-color:#15803D}
+.seg{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}.seg button{min-height:38px;padding:6px 14px;border-radius:99px}.seg button.on{background:var(--tx);color:var(--bg);border-color:var(--tx)}
+.card.sk{border-left:5px solid var(--dg)}.card.sk .sr{opacity:.55}
+.chk.x{color:var(--dg)}.chk.x.on{background:var(--dg);border-color:var(--dg);color:#fff}
+.xl .no{color:var(--dg);font-weight:600}
+.pb{display:flex}.pb i.s{background:var(--dg)}
+</style></head><body>
+<div id="t"></div><header id="bar"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF6A2B" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12"/></svg><span class="brand">Workout Tracker</span></header><main id="app"></main>
+<nav id="nav"></nav>
+<script>
+const SQL_UP=`alter table exercises add column if not exists category text default '';
+alter table exercises add column if not exists rows jsonb;
+alter table history add column if not exists category text default '';
+alter table history add column if not exists row_no int default 0;
+alter table workouts add column if not exists completed boolean default false;
+notify pgrst, 'reload schema';`;
+const SQL=`create table exercises(id uuid primary key default gen_random_uuid(), name text not null, category text default '', rows jsonb, default_sets int default 3, default_weight numeric default 0, default_reps int default 10, comment text default '', created_at timestamptz default now());
+create table workouts(id uuid primary key default gen_random_uuid(), name text not null, items jsonb not null default '[]', completed boolean default false, created_at timestamptz default now());
+create table history(id uuid primary key default gen_random_uuid(), performed_at timestamptz not null default now(), workout_name text, exercise_id uuid, exercise_name text not null, category text default '', row_no int default 0, sets int, weight numeric, reps int, comment text default '');
+alter table exercises enable row level security;
+alter table workouts enable row level security;
+alter table history enable row level security;
+create policy "open" on exercises for all to anon using (true) with check (true);
+create policy "open" on workouts for all to anon using (true) with check (true);
+create policy "open" on history for all to anon using (true) with check (true);`;
+const $=s=>document.querySelector(s);
+const hdr=(t,sub,a='')=>`<header class="ph"><div><h1>${t}</h1><p>${sub}</p></div>${a}</header>`;
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const HK=['performed_at','workout_name','exercise_id','exercise_name','category','row_no','sets','weight','reps','comment'];
+const blank=()=>({sets:1,weight:0,reps:10,comment:''});
+let sb=null,ex=[],wk=[],hist=[],tab='workouts',edit=null,run=null,filter='',fcat='',wfilter='';
+function toast(m){const t=$('#t');t.textContent=m;t.style.display='block';clearTimeout(t.h);t.h=setTimeout(()=>t.style.display='none',3500)}
+const cfg=()=>{try{return JSON.parse(localStorage.getItem('wt_cfg')||'{}')}catch(e){return{}}};
+function connect(){const c=cfg();if(!c.url||!c.key||!window.supabase){sb=null;return false}sb=supabase.createClient(c.url,c.key);return true}
+const rowsOf=e=>Array.isArray(e.rows)&&e.rows.length?e.rows:[{sets:e.default_sets??e.sets??3,weight:e.default_weight??e.weight??0,reps:e.default_reps??e.reps??10,comment:e.comment||''}];
+async function load(){
+  if(!sb)return;
+  const [a,b,c]=await Promise.all([sb.from('exercises').select('*').order('name'),sb.from('workouts').select('*').order('name'),sb.from('history').select('*').order('performed_at',{ascending:false})]);
+  const err=a.error||b.error||c.error;if(err){toast(err.message+' (run the update SQL on the Data tab?)');return}
+  ex=a.data.map(e=>({...e,category:e.category||'',rows:rowsOf(e)}));
+  wk=b.data.map(w=>({...w,items:w.items.map(it=>({...it,rows:rowsOf(it)}))}));
+  hist=c.data;
+}
+const UN='Uncategorized';
+const cats=()=>[...new Set(ex.map(e=>e.category||UN))].sort();
+const exName=id=>(ex.find(e=>e.id===id)||{}).name||'(deleted exercise)';
+const exOpts=sel=>cats().map(c=>`<optgroup label="${esc(c)}">${ex.filter(e=>(e.category||UN)===c).map(e=>`<option value="${e.id}" ${e.id===sel?'selected':''}>${esc(e.name)}</option>`).join('')}</optgroup>`).join('');
+
+/* ---------- rows ---------- */
+const getRows=(k,i)=>k==='ex'?edit.data.rows:k==='wk'?edit.data.items[i].rows:run.items[i].rows;
+function rowsHtml(k,i){
+  const R=getRows(k,i);
+  const inp=(j,f,r)=>`<input aria-label="${f}" type="number" inputmode="decimal" value="${esc(r[f])}" oninput="setR('${k}',${i},${j},'${f}',this.value)">`;
+  return `<div class="sr hd"><span></span><span>Sets</span><span>Weight</span><span>Reps</span><span></span></div>`+
+  R.map((r,j)=>`<div class="sr"><span class="sn">${j+1}</span>${inp(j,'sets',r)}${inp(j,'weight',r)}${inp(j,'reps',r)}<button class="d" aria-label="Remove row" onclick="rmRow('${k}',${i},${j})" ${R.length<2?'disabled':''}>✕</button><input class="cm" placeholder="Comment" value="${esc(r.comment)}" oninput="setR('${k}',${i},${j},'comment',this.value)"></div>`).join('')+
+  `<button onclick="addRow('${k}',${i})">+ Add row</button>`;
+}
+const setR=(k,i,j,f,v)=>{getRows(k,i)[j][f]=v};
+function addRow(k,i){const R=getRows(k,i);R.push({...(R[R.length-1]||blank())});render()}
+function rmRow(k,i,j){const R=getRows(k,i);if(R.length>1){R.splice(j,1);render()}}
+const fromEx=e=>({exercise_id:e.id,exercise_name:e.name,category:e.category,rows:JSON.parse(JSON.stringify(e.rows))});
+function itemHtml(it,i,k){
+  return k==='wk'
+   ?`<div class="card"><div class="row"><select style="flex:1;min-width:0" onchange="pick(${i},this.value)">${exOpts(it.exercise_id)}</select><button class="d" onclick="rmItem(${i})">✕</button></div><br>${rowsHtml('wk',i)}</div>`
+   :`<div class="card${it.done?' dn':''}${it.skipped?' sk':''}"><h2>${i+1}. ${esc(it.exercise_name)}</h2><div class="cat">${esc(it.category||UN)}</div><div class="row" style="margin:10px 0"><button class="chk${it.done?' on':''}" aria-pressed="${!!it.done}" onclick="mark(${i},'done')">${it.done?'✓ Done':'Mark done'}</button><button class="chk x${it.skipped?' on':''}" aria-pressed="${!!it.skipped}" onclick="mark(${i},'skipped')">${it.skipped?'✗ Skipped':'✗ Can\'t do this time'}</button></div>${rowsHtml('run',i)}</div>`;
+}
+
+/* ---------- views ---------- */
+const doneN=a=>a.filter(x=>x.done).length;
+const skN=a=>a.filter(x=>x.skipped).length;
+const wst=w=>{const n=w.items.length,t=doneN(w.items)+skN(w.items);return w.completed||(n&&t===n)?'done':t?'part':'none'};
+const nm=it=>(ex.find(e=>e.id===it.exercise_id)||{name:it.exercise_name}).name;
+const views={
+workouts(){
+  if(run)return hdr(esc(run.name),`${doneN(run.items)} done, ${skN(run.items)} skipped, of ${run.items.length} exercises`)+`<div class="pb"><i style="width:${run.items.length?100*doneN(run.items)/run.items.length:0}%"></i><i class="s" style="width:${run.items.length?100*skN(run.items)/run.items.length:0}%"></i></div>`+run.items.map((it,i)=>itemHtml(it,i,'run')).join('')+`<div class="row"><button class="p" onclick="finish()">Finish &amp; save to history</button><button onclick="completeRun()">Mark workout complete</button><button onclick="run=null;render()">Close</button></div>`;
+  if(edit&&edit.type==='wk'){const d=edit.data;
+    return hdr(d.id?'Edit workout':'New workout','Name it and add up to 25 exercises.')+`<div class="card"><label>Workout name</label><input value="${esc(d.name)}" oninput="edit.data.name=this.value"></div>
+    <h2 class="sh">Exercises</h2>${d.items.map((it,i)=>itemHtml(it,i,'wk')).join('')}
+    <div class="row"><button onclick="addItem()" ${d.items.length>=25?'disabled':''}>+ Add exercise (${d.items.length}/25)</button></div><br>
+    <div class="row"><button class="p" onclick="saveWk()">Save workout</button><button onclick="edit=null;render()">Cancel</button></div>`}
+  const shown=wk.filter(w=>!wfilter||(wfilter==='done'?wst(w)==='done':wst(w)!=='done'));
+  return hdr('Workouts','Your programs. Tick off each exercise as you go.','<button class="p" onclick="newWk()">+ New workout</button>')+
+    `<div class="seg">${[['','All'],['none','Not completed'],['done','Completed']].map(([v,l])=>`<button class="${wfilter===v?'on':''}" onclick="wfilter='${v}';render()">${l}</button>`).join('')}</div>`+
+    (shown.map(w=>{const s=wst(w),d=doneN(w.items)+skN(w.items);return `<div class="card wc${s==='done'?' cd':''}"><div class="row sp"><h2>${esc(w.name)}</h2><span class="pill ${s}">${s==='done'?'Completed':s==='part'?`In progress ${d}/${w.items.length}`:'Not completed'}</span></div><div class="xl">${w.items.map(it=>`<div class="${it.done?'ok':it.skipped?'no':''}">${it.done?'✓':it.skipped?'✗':'○'} ${esc(nm(it))}</div>`).join('')}</div><div class="row" style="margin-top:8px"><button class="p" onclick="start('${w.id}')">${s==='part'?'Continue':'Start'}</button><button onclick="editWk('${w.id}')">Edit</button>${s!=='done'?`<button onclick="setComplete('${w.id}',true)">Mark complete</button>`:''}${d||w.completed?`<button onclick="setComplete('${w.id}',false)">Reset</button>`:''}<button class="d" onclick="delWk('${w.id}')">Delete</button></div></div>`}).join('')||`<p class="mu">${wk.length?'No workouts match this filter.':'No workouts yet. Add some exercises first, then create a workout.'}</p>`);
+},
+exercises(){
+  if(edit&&edit.type==='ex'){const d=edit.data;
+    return hdr(d.id?'Edit exercise':'New exercise','Pick a category and set the default rows.')+`<div class="card"><label>Name</label><input value="${esc(d.name)}" oninput="edit.data.name=this.value"><br><br><label>Category</label><input list="cl" placeholder="e.g. Chest, Legs, Cardio" value="${esc(d.category)}" oninput="edit.data.category=this.value"><datalist id="cl">${cats().filter(c=>c!==UN).map(c=>`<option value="${esc(c)}">`).join('')}</datalist></div><h2 class="sh">Sets</h2><div class="card">${rowsHtml('ex',0)}</div><div class="row"><button class="p" onclick="saveEx()">Save exercise</button><button onclick="edit=null;render()">Cancel</button></div>`}
+  return hdr('Exercises','Your exercise library, grouped by category.','<button class="p" onclick="edit={type:\'ex\',data:{name:\'\',category:\'\',rows:[blank()]}};render()">+ New exercise</button>')+
+    (cats().map(c=>`<h2 class="sh">${esc(c)}</h2>`+ex.filter(e=>(e.category||UN)===c).map(e=>`<div class="card ec"><h2>${esc(e.name)}</h2><div class="mu">${e.rows.map(r=>`${r.sets}×${r.reps} @ ${r.weight}`).join(', ')}</div><div class="row" style="margin-top:8px"><button onclick="editEx('${e.id}')">Edit</button><button class="d" onclick="delEx('${e.id}')">Delete</button></div></div>`).join('')).join('')||'<p class="mu">No exercises yet.</p>');
+},
+history(){
+  const inCat=h=>!fcat||(h.category||UN)===fcat;
+  const hc=[...new Set(hist.map(h=>h.category||UN))].sort();
+  const names=[...new Set(hist.filter(inCat).map(h=>h.exercise_name))].sort();
+  const list=hist.filter(h=>inCat(h)&&(!filter||h.exercise_name===filter));
+  const groups=[],idx={};
+  list.forEach(h=>{const d=new Date(h.performed_at).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'});const k=h.performed_at+'|'+h.exercise_name+'|'+(h.workout_name||'');if(!(k in idx)){idx[k]=groups.length;groups.push({d,h,rows:[]})}groups[idx[k]].rows.push(h)});
+  let last='';
+  return hdr('History','Every logged set, and your progress over time.')+
+  `<div class="card"><div class="g" style="grid-template-columns:1fr 1fr"><div><label>Category</label><select onchange="fcat=this.value;filter='';render()"><option value="">All categories</option>${hc.map(c=>`<option ${c===fcat?'selected':''}>${esc(c)}</option>`).join('')}</select></div><div><label>Show progress for</label><select onchange="filter=this.value;render()"><option value="">All exercises</option>${names.map(n=>`<option ${n===filter?'selected':''}>${esc(n)}</option>`).join('')}</select></div></div>${filter?chart(filter):''}</div>`+
+  (groups.map(g=>{const hd=g.d!==last?`<div class="dh">${g.d}</div>`:'';last=g.d;
+    return hd+`<div class="card"><h2>${esc(g.h.exercise_name)}</h2><div class="cat">${esc(g.h.category||UN)}${g.h.workout_name?' – '+esc(g.h.workout_name):''}</div>`+g.rows.sort((a,b)=>(a.row_no||0)-(b.row_no||0)).map(h=>`<div class="hr"><span>${h.sets} × ${h.reps} @ ${h.weight}${h.comment?' – '+esc(h.comment):''}</span><button class="d" onclick="delH('${h.id}')">Delete</button></div>`).join('')+'</div>'}).join('')||'<p class="mu">No history yet. Start a workout and save it.</p>');
+},
+data(){
+  const c=cfg();
+  return hdr('Data &amp; settings','Connect Supabase and move your data in or out.')+`
+  <div class="card"><h2>Supabase connection</h2><label>Project URL</label><input id="cu" value="${esc(c.url)}" placeholder="https://xxxx.supabase.co"><br><br><label>Anon public key</label><input id="ck" value="${esc(c.key)}"><br><br><button class="p" onclick="saveCfg()">Save &amp; connect</button></div>
+  <div class="card"><h2>Import / export</h2><div class="row"><button onclick="exp('exercises')">Export exercises</button><button onclick="imp('exercises')">Import exercises</button></div><br><div class="row"><button onclick="exp('history')">Export history</button><button onclick="imp('history')">Import history</button></div><p class="mu">Files are JSON. Older exercise files still import.</p></div>
+  <div class="card"><h2>Update an existing database</h2><p class="mu">Already set up an earlier version? Run this once in the Supabase SQL Editor to add categories and multi-row support.</p><pre>${esc(SQL_UP)}</pre><button onclick="navigator.clipboard.writeText(SQL_UP).then(()=>toast('SQL copied'))">Copy update SQL</button></div>
+  <div class="card"><h2>New database setup</h2><p class="mu">First time? Paste this into the SQL Editor and run it.</p><pre>${esc(SQL)}</pre><button onclick="navigator.clipboard.writeText(SQL).then(()=>toast('SQL copied'))">Copy setup SQL</button></div>`;
+}};
+function chart(name){
+  const m={};hist.filter(h=>h.exercise_name===name).forEach(h=>{const d=h.performed_at.slice(0,10);m[d]=Math.max(m[d]||0,+h.weight||0)});
+  const k=Object.keys(m).sort();if(k.length<2)return '<p class="mu">Log this exercise on 2+ days to see a progress chart.</p>';
+  const v=k.map(x=>m[x]),mx=Math.max(...v),mn=Math.min(...v),W=300,H=110,r=mx-mn||1;
+  const p=v.map((y,i)=>[10+i*(W-20)/(k.length-1),H-15-(y-mn)/r*(H-35)]);
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="margin-top:8px"><polyline fill="none" stroke="var(--ac)" stroke-width="2" points="${p.map(q=>q.join(',')).join(' ')}"/>${p.map(q=>`<circle cx="${q[0]}" cy="${q[1]}" r="3" fill="var(--ac)"/>`).join('')}<text x="10" y="12" font-size="10" fill="var(--mu)">Top weight per day: ${v[0]} → ${v[v.length-1]}</text></svg>`;
+}
+function render(){
+  const tabs=[['workouts','Workouts'],['exercises','Exercises'],['history','History'],['data','Data']];
+  $('#nav').innerHTML=tabs.map(([k,l])=>`<button class="${tab===k?'on':''}" onclick="go('${k}')">${l}</button>`).join('');
+  $('#app').innerHTML=sb||tab==='data'?views[tab]():hdr('Welcome','Connect Supabase to get started.')+'<div class="card">Open the Data tab and enter your Supabase project URL and key.</div>';
+}
+function go(t){tab=t;edit=null;run=null;render();scrollTo(0,0)}
+
+/* ---------- workouts ---------- */
+function addItem(){if(!ex.length)return toast('Add exercises first');if(edit.data.items.length>=25)return;edit.data.items.push(fromEx(ex[0]));render()}
+function pick(i,id){const e=ex.find(x=>x.id===id);if(e)edit.data.items[i]=fromEx(e);render()}
+function rmItem(i){edit.data.items.splice(i,1);render()}
+const newWk=()=>{edit={type:'wk',data:{name:'',items:[]}};render()};
+function editWk(id){edit={type:'wk',data:JSON.parse(JSON.stringify(wk.find(x=>x.id===id)))};render()}
+const cleanRows=R=>R.map(r=>({sets:+r.sets||0,weight:+r.weight||0,reps:+r.reps||0,comment:r.comment||''}));
+async function saveWk(){
+  const d=edit.data;if(!d.name.trim())return toast('Name required');
+  const p={name:d.name.trim(),items:d.items.map(it=>({exercise_id:it.exercise_id,exercise_name:it.exercise_name,category:it.category||'',rows:cleanRows(it.rows),done:!!it.done,skipped:!!it.skipped}))};
+  const r=d.id?await sb.from('workouts').update(p).eq('id',d.id):await sb.from('workouts').insert(p);
+  if(r.error)return toast(r.error.message);edit=null;await load();render();
+}
+async function delWk(id){if(!confirm('Delete this workout?'))return;const r=await sb.from('workouts').delete().eq('id',id);if(r.error)return toast(r.error.message);await load();render()}
+function start(id){const w=wk.find(x=>x.id===id);run={id:w.id,name:w.name,items:w.items.map(it=>{const e=ex.find(x=>x.id===it.exercise_id);return{...it,exercise_name:e?e.name:it.exercise_name,category:e?e.category:it.category,rows:JSON.parse(JSON.stringify(it.rows))}})};render();scrollTo(0,0)}
+async function persist(w){const r=await sb.from('workouts').update({items:w.items,completed:!!w.completed}).eq('id',w.id);if(r.error)toast(r.error.message+' (run the update SQL on the Data tab?)')}
+function mark(i,f){
+  const it=run.items[i],on=!(f==='done'?it.done:it.skipped);it.done=f==='done'&&on;it.skipped=f==='skipped'&&on;render();
+  const w=wk.find(x=>x.id===run.id);if(!w)return;w.items[i].done=it.done;w.items[i].skipped=it.skipped;persist(w);
+}
+async function setComplete(id,v){const w=wk.find(x=>x.id===id);w.completed=v;if(!v)w.items.forEach(it=>{it.done=false;it.skipped=false});render();await persist(w)}
+async function completeRun(){const w=wk.find(x=>x.id===run.id);if(w){w.completed=true;await persist(w)}run=null;render()}
+async function finish(){
+  const rows=[];if(!run.items.some(it=>it.done))return toast('Mark at least one exercise done');run.items.filter(it=>it.done).forEach(it=>cleanRows(it.rows).forEach((r,j)=>rows.push({workout_name:run.name,exercise_id:it.exercise_id,exercise_name:it.exercise_name,category:it.category||'',row_no:j,...r})));
+  const r=await sb.from('history').insert(rows);if(r.error)return toast(r.error.message);
+  const w=wk.find(x=>x.id===run.id);if(w){w.completed=true;await persist(w)}
+  run=null;await load();toast('Workout saved');tab='history';render();
+}
+
+/* ---------- exercises ---------- */
+function editEx(id){edit={type:'ex',data:JSON.parse(JSON.stringify(ex.find(e=>e.id===id)))};render()}
+const exPayload=(name,category,rows)=>({name,category,rows,default_sets:rows[0].sets,default_weight:rows[0].weight,default_reps:rows[0].reps});
+async function saveEx(){
+  const d=edit.data;if(!String(d.name).trim())return toast('Name required');
+  const p=exPayload(d.name.trim(),(d.category||'').trim(),cleanRows(d.rows));
+  const r=d.id?await sb.from('exercises').update(p).eq('id',d.id):await sb.from('exercises').insert(p);
+  if(r.error)return toast(r.error.message);edit=null;await load();render();
+}
+async function delEx(id){if(!confirm('Delete this exercise? Past history entries are kept.'))return;const r=await sb.from('exercises').delete().eq('id',id);if(r.error)return toast(r.error.message);await load();render()}
+async function delH(id){if(!confirm('Delete this history entry?'))return;const r=await sb.from('history').delete().eq('id',id);if(r.error)return toast(r.error.message);await load();render()}
+
+/* ---------- data ---------- */
+async function saveCfg(){localStorage.setItem('wt_cfg',JSON.stringify({url:$('#cu').value.trim(),key:$('#ck').value.trim()}));if(connect()){await load();toast('Connected')}render()}
+function exp(t){
+  const rows=t==='exercises'?ex.map(e=>({name:e.name,category:e.category||'',rows:e.rows})):hist.map(r=>Object.fromEntries(HK.map(k=>[k,r[k]])));
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(rows,null,2)],{type:'application/json'}));a.download=`${t}-${new Date().toISOString().slice(0,10)}.json`;a.click();
+}
+function imp(t){
+  if(!sb)return toast('Connect Supabase first');
+  const i=document.createElement('input');i.type='file';i.accept='.json,application/json';
+  i.onchange=async()=>{try{
+    const rows=JSON.parse(await i.files[0].text());if(!Array.isArray(rows))throw Error('Expected a JSON list');
+    const clean=t==='exercises'?rows.map(r=>exPayload(String(r.name),r.category||'',cleanRows(rowsOf(r)))):rows.map(r=>Object.fromEntries(HK.filter(k=>r[k]!==undefined).map(k=>[k,r[k]])));
+    const r=await sb.from(t).insert(clean);if(r.error)throw r.error;
+    toast(`Imported ${clean.length} rows`);await load();render();
+  }catch(e){toast('Import failed: '+e.message)}};
+  i.click();
+}
+if(connect())load().then(render);else{tab='data';render()}
+</script></body></html>
